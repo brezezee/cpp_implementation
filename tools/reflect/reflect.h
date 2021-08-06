@@ -82,10 +82,9 @@ public:
         ConfigManager<Targs...>::Instance()->_register(strTypeName, CreateObject);   // 注册构造函数  
       }
 
-	    inline void active() const {}
   };
 
-    // 构造时 初始化静态成员
+    // 初始化m_binder
     ConstructorBind() { (void)&m_binder; }
     virtual ~ConstructorBind() { };
 
