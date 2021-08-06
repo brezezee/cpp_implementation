@@ -55,7 +55,7 @@ public:
 //const std::vector<std::string> test::dependence = {"multithread", "profile"};
 
 
-class profile : public Config, public ConstructorBind<profile, std::string> {
+class profile : public Config, public ConstructorBind<profile, const std::string&> {
 public:
     
     profile(const std::string &inpath) : path(inpath){

@@ -1,6 +1,7 @@
 #include "model.h"
 #include <queue>
 #include <unordered_map>
+#include <memory>
 
 namespace lar {
 
@@ -11,14 +12,14 @@ Model* ModelManager::read_model(std::string& modelpath) {
 
 bool ModelManager::parse(std::vector<std::vector<std::string> >& config_list) {
     std::string prefix = "lar::";
-    for (const auto &param : config_list) { 
+    for (const auto& param : config_list) { 
         if (param.size() == 1) {
             inst_config.push_back(
                 std::shared_ptr<Config>(lar::CREATE_CONFIG(prefix + param[0]))
             );
         }else if (param.size() == 2) {
             inst_config.push_back(
-                std::shared_ptr<Config>(lar::CREATE_CONFIG(prefix + param[0], prefix + param[1]))
+                std::shared_ptr<Config>(lar::CREATE_CONFIG(prefix + param[0], param[1]))
             );
         }
     }

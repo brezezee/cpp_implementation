@@ -86,7 +86,7 @@ public:
   };
 
     // 构造时 初始化静态成员
-    ConstructorBind() { m_binder.active(); }
+    ConstructorBind() { (void)&m_binder; }
     virtual ~ConstructorBind() { };
 
     // 构造具体对象的单例
