@@ -59,8 +59,7 @@ private:
     std::unordered_map<std::string, std::function<Config *(Targs &&...)>> m_mapCreateFunction;    // 名称到构造的映射
 };
 
-template <typename... Targs>
-ConfigManager<Targs...> *ConfigManager<Targs...>::mp_ConfigManager = nullptr;   
+
 
 // 每一个继承此类的子类都会传入子类和它的构造参数，此类负责将它的构造函数绑定到单例的工厂。
 // 用于绑定具体类的构造函数 T ： 需要绑定的类， Targs： T类的构造函数参数
@@ -96,9 +95,7 @@ public:
     static Binder m_binder;
 };
 
-template <typename T, typename... Targs>
-typename ConstructorBind<T, Targs...>::Binder
-    ConstructorBind<T, Targs...>::m_binder;  
+
 
 
 // 使用的时候通过构造函数的参数去调用单例Manager，找到该函数的构造并调用

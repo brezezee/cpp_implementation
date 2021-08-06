@@ -6,6 +6,13 @@
 
 namespace lar {
 
+template <typename... Targs>
+ConfigManager<Targs...> *ConfigManager<Targs...>::mp_ConfigManager = nullptr;   
+
+template <typename T, typename... Targs>
+typename ConstructorBind<T, Targs...>::Binder
+    ConstructorBind<T, Targs...>::m_binder;  
+
 class Config {
 public:
     Config():vaild(false) {}
