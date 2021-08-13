@@ -6,8 +6,29 @@
 #include <algorithm>
 #include <cassert>
 
+
+template< class X, class Y, class T > 
+inline void sp_enable_shared_from_this( shared_ptr<X> const * spx, Y const * py, enable_shared_from_this< T > const * pe )
+{
+    if( pe != 0 )
+    {
+        pe->_internal_accept_owner( spx, const_cast< Y* >( py ) );
+    }
+}
+
+
+struct sp_any_pointer
+{
+    template<class T> sp_any_pointer( T* ) {}
+};
+
+inline void sp_enable_shared_from_this( sp_any_pointer, sp_any_pointer, sp_any_pointer )
+{
+}
+
 // 前向申明
 template <class T> class weak_ptr;
+template<class T> class enable_shared_from_this;
 
 template <typename T>
 class shared_ptr {
@@ -17,6 +38,7 @@ private:
 
     template<class Cast_> friend class shared_ptr;  // 
     template<class Y> friend class weak_ptr;
+
 public:
     shared_ptr() noexcept = default;
 
@@ -26,6 +48,15 @@ public:
             p_count = new count_block();
         }
     }
+
+/*
+    template<class T>
+    explicit shared_ptr( T * p ): raw_ptr( p ) 
+    {
+        sp_enable_shared_from_this( this, p, p );
+    }
+
+*/
 
     shared_ptr(const shared_ptr& rhs) noexcept : raw_ptr(rhs.raw_ptr), p_count(rhs.p_count) {
         if (p_count) {
@@ -42,6 +73,13 @@ public:
         if (p_count) {
             ++ p_count->shared_count;
         }
+    }
+
+    template<class Cast>
+    explicit shared_ptr(const weak_ptr<Cast>& rhs) {
+        // if (rhs.raw_ptr) {
+        // }
+        raw_ptr = rhs.raw_ptr;  // not safe
     }
 
     explicit shared_ptr(const weak_ptr<T>& w_ptr) noexcept 
@@ -63,6 +101,10 @@ public:
         printf("~shared\n");
         dec_count();
     }
+
+
+
+    
 
     // 赋值
     shared_ptr& operator= (const shared_ptr& rhs) noexcept {
@@ -95,6 +137,7 @@ public:
     }
 
     void reset(T* ptr) {
+        assert(raw_ptr == nullptr || raw_ptr != ptr);  // self reset
         dec_count();
         raw_ptr = ptr;
         p_count = new count_block();
@@ -123,6 +166,7 @@ private:
         -- p_count->shared_count;
 
         if (p_count->shared_count <= 0) {
+            -- p_count->weak_count;
             delete raw_ptr;
             raw_ptr = nullptr;
             if (p_count->weak_count <= 0) {
