@@ -4,6 +4,16 @@
 #include <iostream>
 
 static uint32_t s_inc_id = 1;
+TimeWheelManager* TimeWheelManager::ptimemanager_ = nullptr;
+TimeWheelManager::GC TimeWheelManager::gc;
+
+
+TimeWheelManager* TimeWheelManager::GetTimerWheelManager() {
+  if (!ptimemanager_) {
+    ptimemanager_ = new TimeWheelManager();
+  }
+  return ptimemanager_;
+}
 
 TimeWheelManager::TimeWheelManager(uint32_t timer_step_ms)
     : timer_step_ms_(timer_step_ms)
@@ -12,8 +22,12 @@ TimeWheelManager::TimeWheelManager(uint32_t timer_step_ms)
   AppendTimeWheel(1000 / timer_step_ms, timer_step_ms, "ScaleTimeWheel");
 }
 
+TimeWheelManager::~TimeWheelManager() {
+  Stop();
+}
+
 bool TimeWheelManager::Start() {
-  if (timer_step_ms_ < 50) {
+  if (timer_step_ms_ < 10) {
     return false;
   }
   
@@ -28,6 +42,7 @@ bool TimeWheelManager::Start() {
 
 void TimeWheelManager::Run() {
   while (true) {
+    // 计时 tick
     std::this_thread::sleep_for(std::chrono::milliseconds(timer_step_ms_));
 
     std::lock_guard<std::mutex> lock(mutex_);
@@ -37,7 +52,7 @@ void TimeWheelManager::Run() {
 
     // 需要有一个和最小刻度保持一致的时间轮
     TimeWheelPtr least_time_wheel = GetLeastTimeWheel();
-    least_time_wheel->Increase();   // 它会处理进位后的定时器刷新
+    least_time_wheel->Increase();
     // 最小刻度时间轮的定时器需要管家来负责处理，并且需要执行的定时器一定都是落到最小刻度的定时器
     std::list<spTimer> slot = std::move(least_time_wheel->TakeoutSlot());
     for (auto&& timer : slot) {

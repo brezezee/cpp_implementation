@@ -9,7 +9,7 @@
 
 class TimeWheelManager {
 public:
-  explicit TimeWheelManager(uint32_t timer_step_ms = 50);
+  static TimeWheelManager* GetTimerWheelManager();
 
   uint32_t CreateTimerAt(int64_t trigger_time, const TaskCallback& task);
   uint32_t CreateTimerAfter(int64_t delay_time, const TaskCallback& task);
@@ -22,11 +22,28 @@ public:
 
   void AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name = "");
 
+
+
 private:
   void Run();
 
   TimeWheelPtr GetGreatestTimeWheel();
   TimeWheelPtr GetLeastTimeWheel();
+
+// 单例相关
+private:
+  explicit TimeWheelManager(uint32_t timer_step_ms = 50);
+  ~TimeWheelManager();
+
+  static TimeWheelManager* ptimemanager_;
+
+  struct GC {
+    ~GC() {
+      if (ptimemanager_) delete ptimemanager_;
+    }
+  };
+
+  static GC gc;
 
 private:
   std::mutex mutex_;
