@@ -23,8 +23,6 @@ public:
 
   void AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name = "");
 
-
-
 private:
   void Run();
 
@@ -47,7 +45,7 @@ private:
   static GC gc;
 
 private:
-  std::mutex mutex_;
+  std::mutex mtx_;
   std::thread thread_;
 
   bool stop_;

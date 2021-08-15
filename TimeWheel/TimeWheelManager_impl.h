@@ -53,7 +53,7 @@ void TimeWheelManager<BaseScale>::Run() {
     // 计时 tick
     std::this_thread::sleep_for(std::chrono::milliseconds(base_scale_ms_));
 
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mtx_);
     if (stop_) {
       break;
     }
@@ -83,7 +83,7 @@ void TimeWheelManager<BaseScale>::Run() {
 template<int BaseScale>
 void TimeWheelManager<BaseScale>::Stop() {
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mtx_);
     stop_ = true;
   }
 
@@ -149,7 +149,7 @@ uint32_t TimeWheelManager<BaseScale>::CreateTimerAt(int64_t trigger_time, const 
     return 0;
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mtx_);
   ++s_inc_id;
   GetGreatestTimeWheel()->AddTimer(std::make_shared<Timer>(s_inc_id, trigger_time, 0, task));
 
@@ -167,7 +167,7 @@ uint32_t TimeWheelManager<BaseScale>::CreateTimerEvery(int64_t interval_time, co
     return 0;
   }
 
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mtx_);
   ++s_inc_id;
   int64_t when = GetNowTimestamp() + interval_time;
   GetGreatestTimeWheel()->AddTimer(std::make_shared<Timer>(s_inc_id, when, interval_time, task));
@@ -176,6 +176,6 @@ uint32_t TimeWheelManager<BaseScale>::CreateTimerEvery(int64_t interval_time, co
 }
 template<int BaseScale>
 void TimeWheelManager<BaseScale>::CancelTimer(uint32_t timer_id) {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(mtx_);
   cancel_timer_ids_.insert(timer_id);
 }
