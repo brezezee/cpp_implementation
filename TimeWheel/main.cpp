@@ -2,7 +2,7 @@
 #include <string>
 #include <thread>
 #include <ctime>
-#include "TimeWheelManager.h"
+#include "TimeWheelManager_impl.h"
 
 std::string timetoStr(){
   // char tmp[64] = {0};
@@ -16,20 +16,17 @@ std::string timetoStr(){
   tt = system_clock::to_time_t ( cur_time );
   return ctime(&tt);
 }
- 
+
 int main() {
-  
-  TimeWheelManager* tw_manager = TimeWheelManager::GetTimerWheelManager();
-  // tw_manager->AppendTimeWheel(1000 / timer_step_ms, timer_step_ms, "MillisecondTimeWheel");
-  tw_manager->AppendTimeWheel(60, 1000, "SecondTimeWheel");
+  // 默认scale 为 50ms 
+  TimeWheelManager<>* tw_manager = TimeWheelManager<>::GetTimerWheelManager();
+
   // Hour time wheel. 24 scales, 1 scale = 60 * 60 * 1000 ms.
   tw_manager->AppendTimeWheel(24, 60 * 60 * 1000, "HourTimeWheel");
   // Minute time wheel. 60 scales, 1 scale = 60 * 1000 ms.
   tw_manager->AppendTimeWheel(60, 60 * 1000, "MinuteTimeWheel");
   // Second time wheel. 60 scales, 1 scale = 1000 ms.
-  
-  // Millisecond time wheel. 1000/timer_step_ms scales, 1 scale = timer_step ms.
-  
+  tw_manager->AppendTimeWheel(60, 1000, "SecondTimeWheel");
   
   tw_manager->Start();
 
