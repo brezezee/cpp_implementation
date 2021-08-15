@@ -15,6 +15,7 @@ template<int BaseScale>
 TimeWheelManager<BaseScale>* TimeWheelManager<BaseScale>::GetTimerWheelManager() {
   if (!ptimemanager_) {
     ptimemanager_ = new TimeWheelManager();
+    (void)gc;
   }
   return ptimemanager_;
 }
@@ -29,7 +30,7 @@ TimeWheelManager<BaseScale>::TimeWheelManager(uint32_t base_scale_ms)
 
 template<int BaseScale>
 TimeWheelManager<BaseScale>::~TimeWheelManager() {
-  Stop();
+  // Stop();
 }
 
 template<int BaseScale>
@@ -109,8 +110,8 @@ TimeWheelPtr TimeWheelManager<BaseScale>::GetLeastTimeWheel() {
 }
 
 template<int BaseScale>
-void TimeWheelManager<BaseScale>::AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name) {
-  TimeWheelPtr time_wheel = std::make_shared<TimeWheel>(scales, scale_unit_ms, name);
+void TimeWheelManager<BaseScale>::AppendTimeWheel(uint32_t numslot, uint32_t ms_pre_slot, const std::string& name) {
+  TimeWheelPtr time_wheel = std::make_shared<TimeWheel>(numslot, ms_pre_slot, name);
   if (time_wheels_.empty()) {
     time_wheels_.push_back(time_wheel);
     return;
@@ -158,8 +159,8 @@ uint32_t TimeWheelManager<BaseScale>::CreateTimerAt(int64_t trigger_time, const 
 
 template<int BaseScale>
 uint32_t TimeWheelManager<BaseScale>::CreateTimerAfter(int64_t delay_time, const TaskCallback& task) {
-  int64_t when = GetNowTimestamp() + delay_time;
-  return CreateTimerAt(when, task);
+  int64_t trigger_time = GetNowTimestamp() + delay_time;
+  return CreateTimerAt(trigger_time, task);
 }
 template<int BaseScale>
 uint32_t TimeWheelManager<BaseScale>::CreateTimerEvery(int64_t interval_time, const TaskCallback& task) {
@@ -169,8 +170,8 @@ uint32_t TimeWheelManager<BaseScale>::CreateTimerEvery(int64_t interval_time, co
 
   std::lock_guard<std::mutex> lock(mtx_);
   ++s_inc_id;
-  int64_t when = GetNowTimestamp() + interval_time;
-  GetGreatestTimeWheel()->AddTimer(std::make_shared<Timer>(s_inc_id, when, interval_time, task));
+  int64_t trigger_time = GetNowTimestamp() + interval_time;
+  GetGreatestTimeWheel()->AddTimer(std::make_shared<Timer>(s_inc_id, trigger_time, interval_time, task));
 
   return s_inc_id;
 }
