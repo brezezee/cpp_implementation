@@ -21,7 +21,7 @@ public:
   bool Start();
   void Stop();
 
-  void AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name = "");
+  void AppendTimeWheel(uint32_t numslot, uint32_t ms_pre_slot, const std::string& name = "");
 
 private:
   void Run();
@@ -37,6 +37,8 @@ private:
   static TimeWheelManager* ptimemanager_;
 
   struct GC {
+    GC() { }
+
     ~GC() {
       if (ptimemanager_) delete ptimemanager_;
     }

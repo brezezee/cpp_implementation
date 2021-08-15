@@ -12,14 +12,14 @@ using spTimer = std::shared_ptr<Timer>;
 
 class TimeWheel {
 public:
-  TimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name = "");
+  TimeWheel(uint32_t slot, uint32_t ms_pre_slot, const std::string& name = "");
 
-  uint32_t scale_unit_ms() const {
-    return ms_pre_scale_;
+  uint32_t ms_pre_slot() const {
+    return ms_pre_slot_;
   }
 
-  uint32_t scales() const {
-    return scales_;
+  uint32_t num_slot() const {
+    return num_slot_;
   }
 
   uint32_t current_index() const {
@@ -45,20 +45,20 @@ public:
   std::list<spTimer> TakeoutSlot();
 
   friend bool operator< (const TimeWheel& lhs, const TimeWheel& rhs) {
-    return lhs.ms_pre_scale_ < rhs.ms_pre_scale_;
+    return lhs.ms_pre_slot_ < rhs.ms_pre_slot_;
   }
 
   friend bool operator> (const TimeWheel& lhs, const TimeWheel& rhs) {
-    return lhs.ms_pre_scale_ > rhs.ms_pre_scale_;
+    return lhs.ms_pre_slot_ > rhs.ms_pre_slot_;
   }
 
 private:
   std::string name_;
   uint32_t current_index_;
 
-  // A time wheel can be devided into multiple scales. A scals has N ms.
-  uint32_t scales_;
-  uint32_t ms_pre_scale_;
+  // A time wheel can be devided into multiple slot. A scals has N ms.
+  uint32_t num_slot_;
+  uint32_t ms_pre_slot_;
 
   // Every slot corresponds to a scale. Every slot contains the timers.
   std::vector<std::list<spTimer>> slots_;

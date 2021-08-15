@@ -1,18 +1,18 @@
 #include "TimeWheel.h"
 #include <iostream>
 
-TimeWheel::TimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name)
+TimeWheel::TimeWheel(uint32_t num_slot_, uint32_t ms_pre_slot, const std::string& name)
     : name_(name)
     , current_index_(0)
-    , scales_(scales)
-    , ms_pre_scale_(scale_unit_ms)
-    , slots_(scales)
+    , num_slot_(num_slot_)
+    , ms_pre_slot_(ms_pre_slot)
+    , slots_(num_slot_)
     , greater_level_tw_(nullptr)
     , less_level_tw_(nullptr) {
 }
 
 int64_t TimeWheel::GetWheelTime() const {
-  int64_t time = current_index_ * ms_pre_scale_;
+  int64_t time = current_index_ * ms_pre_slot_;
   if (less_level_tw_ != nullptr) {  // 加上下级更精细的time
     time += less_level_tw_->GetWheelTime();
   }
@@ -29,8 +29,8 @@ void TimeWheel::AddTimer(spTimer timer) {
   int64_t diff = timer->trigger_time() + less_tw_time - GetNowTimestamp();
 
   // 当触发间隔大于当前时间轮的刻度时，直接哈希到当前时间轮(因为暂时不会触发)
-  if (diff >= ms_pre_scale_) {
-    size_t idx = (current_index_ + diff / ms_pre_scale_) % scales_;
+  if (diff >= ms_pre_slot_) {
+    size_t idx = (current_index_ + diff / ms_pre_slot_) % num_slot_;
     slots_[idx].push_back(timer);
     return;
   }
@@ -47,11 +47,11 @@ void TimeWheel::AddTimer(spTimer timer) {
 void TimeWheel::Increase() {
   // Increase the time wheel.
   ++current_index_;
-  if (current_index_ < scales_) {
+  if (current_index_ < num_slot_) {
     return;
   }
 
-  current_index_ = current_index_ % scales_;
+  current_index_ = current_index_ % num_slot_;
   // 向上进位  当前轮已经转了一圈， 需要把上一级中进位后的刻度里的定时器取出，重新放入下级
   // 精细刻度的时间轮中，因为可能之前定时器因为相对触发时间太长，导致未放入精细刻度
   if (greater_level_tw_ != nullptr) {

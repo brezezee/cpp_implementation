@@ -65,11 +65,11 @@ int main() {
     std::cout << "Every 2m: " << timetoStr() << std::endl;
   });
 
+  // std::this_thread::sleep_for(std::chrono::seconds(30));
+  // tw_manager->CancelTimer(timer_id);
+
   std::this_thread::sleep_for(std::chrono::seconds(30));
-  tw_manager->CancelTimer(timer_id);
-
-  std::this_thread::sleep_for(std::chrono::minutes(2000));
   tw_manager->Stop();
-
+  
   return 0;
 }
