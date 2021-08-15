@@ -7,6 +7,7 @@
 
 #include "TimeWheel.h"
 
+template<int BaseScale = 50>
 class TimeWheelManager {
 public:
   static TimeWheelManager* GetTimerWheelManager();
@@ -32,7 +33,7 @@ private:
 
 // 单例相关
 private:
-  explicit TimeWheelManager(uint32_t timer_step_ms = 50);
+  TimeWheelManager(uint32_t basescale = BaseScale);
   ~TimeWheelManager();
 
   static TimeWheelManager* ptimemanager_;
@@ -53,6 +54,6 @@ private:
 
   std::unordered_set<uint32_t> cancel_timer_ids_;
 
-  uint32_t timer_step_ms_;
+  uint32_t base_scale_ms_;
   std::vector<TimeWheelPtr> time_wheels_;
 };

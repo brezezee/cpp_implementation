@@ -4,30 +4,37 @@
 #include <iostream>
 
 static uint32_t s_inc_id = 1;
-TimeWheelManager* TimeWheelManager::ptimemanager_ = nullptr;
-TimeWheelManager::GC TimeWheelManager::gc;
 
+template<int BaseScale>
+TimeWheelManager<BaseScale>* TimeWheelManager<BaseScale>::ptimemanager_ = nullptr;
 
-TimeWheelManager* TimeWheelManager::GetTimerWheelManager() {
+template<int BaseScale>
+typename TimeWheelManager<BaseScale>::GC TimeWheelManager<BaseScale>::gc;
+
+template<int BaseScale>
+TimeWheelManager<BaseScale>* TimeWheelManager<BaseScale>::GetTimerWheelManager() {
   if (!ptimemanager_) {
     ptimemanager_ = new TimeWheelManager();
   }
   return ptimemanager_;
 }
 
-TimeWheelManager::TimeWheelManager(uint32_t timer_step_ms)
-    : timer_step_ms_(timer_step_ms)
+template<int BaseScale>
+TimeWheelManager<BaseScale>::TimeWheelManager(uint32_t base_scale_ms)
+    : base_scale_ms_(base_scale_ms)
     , stop_(false) {
   // 至少需要一个刻度为最小精度的时间轮
-  AppendTimeWheel(1000 / timer_step_ms, timer_step_ms, "ScaleTimeWheel");
+  AppendTimeWheel(1000 / base_scale_ms, base_scale_ms, "ScaleTimeWheel");
 }
 
-TimeWheelManager::~TimeWheelManager() {
+template<int BaseScale>
+TimeWheelManager<BaseScale>::~TimeWheelManager() {
   Stop();
 }
 
-bool TimeWheelManager::Start() {
-  if (timer_step_ms_ < 10) {
+template<int BaseScale>
+bool TimeWheelManager<BaseScale>::Start() {
+  if (base_scale_ms_ < 10) {
     return false;
   }
   
@@ -40,10 +47,11 @@ bool TimeWheelManager::Start() {
   return true;
 }
 
-void TimeWheelManager::Run() {
+template<int BaseScale>
+void TimeWheelManager<BaseScale>::Run() {
   while (true) {
     // 计时 tick
-    std::this_thread::sleep_for(std::chrono::milliseconds(timer_step_ms_));
+    std::this_thread::sleep_for(std::chrono::milliseconds(base_scale_ms_));
 
     std::lock_guard<std::mutex> lock(mutex_);
     if (stop_) {
@@ -72,7 +80,8 @@ void TimeWheelManager::Run() {
   }
 }
 
-void TimeWheelManager::Stop() {
+template<int BaseScale>
+void TimeWheelManager<BaseScale>::Stop() {
   {
     std::lock_guard<std::mutex> lock(mutex_);
     stop_ = true;
@@ -81,7 +90,8 @@ void TimeWheelManager::Stop() {
   thread_.join();
 }
 
-TimeWheelPtr TimeWheelManager::GetGreatestTimeWheel() {
+template<int BaseScale>
+TimeWheelPtr TimeWheelManager<BaseScale>::GetGreatestTimeWheel() {
   if (time_wheels_.empty()) {
     return TimeWheelPtr();
   }
@@ -89,7 +99,8 @@ TimeWheelPtr TimeWheelManager::GetGreatestTimeWheel() {
   return time_wheels_.front();
 }
 
-TimeWheelPtr TimeWheelManager::GetLeastTimeWheel() {
+template<int BaseScale>
+TimeWheelPtr TimeWheelManager<BaseScale>::GetLeastTimeWheel() {
   if (time_wheels_.empty()) {
     return TimeWheelPtr();
   }
@@ -97,7 +108,8 @@ TimeWheelPtr TimeWheelManager::GetLeastTimeWheel() {
   return time_wheels_.back();
 }
 
-void TimeWheelManager::AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name) {
+template<int BaseScale>
+void TimeWheelManager<BaseScale>::AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, const std::string& name) {
   TimeWheelPtr time_wheel = std::make_shared<TimeWheel>(scales, scale_unit_ms, name);
   if (time_wheels_.empty()) {
     time_wheels_.push_back(time_wheel);
@@ -131,7 +143,8 @@ void TimeWheelManager::AppendTimeWheel(uint32_t scales, uint32_t scale_unit_ms, 
   );
 }
 
-uint32_t TimeWheelManager::CreateTimerAt(int64_t trigger_time, const TaskCallback& task) {
+template<int BaseScale>
+uint32_t TimeWheelManager<BaseScale>::CreateTimerAt(int64_t trigger_time, const TaskCallback& task) {
   if (time_wheels_.empty()) {
     return 0;
   }
@@ -143,12 +156,13 @@ uint32_t TimeWheelManager::CreateTimerAt(int64_t trigger_time, const TaskCallbac
   return s_inc_id;
 }
 
-uint32_t TimeWheelManager::CreateTimerAfter(int64_t delay_time, const TaskCallback& task) {
+template<int BaseScale>
+uint32_t TimeWheelManager<BaseScale>::CreateTimerAfter(int64_t delay_time, const TaskCallback& task) {
   int64_t when = GetNowTimestamp() + delay_time;
   return CreateTimerAt(when, task);
 }
-
-uint32_t TimeWheelManager::CreateTimerEvery(int64_t interval_time, const TaskCallback& task) {
+template<int BaseScale>
+uint32_t TimeWheelManager<BaseScale>::CreateTimerEvery(int64_t interval_time, const TaskCallback& task) {
   if (time_wheels_.empty()) {
     return 0;
   }
@@ -160,8 +174,8 @@ uint32_t TimeWheelManager::CreateTimerEvery(int64_t interval_time, const TaskCal
 
   return s_inc_id;
 }
-
-void TimeWheelManager::CancelTimer(uint32_t timer_id) {
+template<int BaseScale>
+void TimeWheelManager<BaseScale>::CancelTimer(uint32_t timer_id) {
   std::lock_guard<std::mutex> lock(mutex_);
   cancel_timer_ids_.insert(timer_id);
 }
